@@ -112,11 +112,19 @@
     <div id="sniper" class="tab-content">
         <h3 style="color: var(--neon-blue);">SELECT MARKETPLACE</h3>
         <div class="market-grid">
-            <div class="market-card"><i class="fas fa-gem"></i>GetGems</div>
-            <div class="market-card"><i class="fas fa-bolt"></i>XPlus</div>
-            <div class="market-card"><i class="fas fa-fragment"></i>Fragment</div>
-            <div class="market-card"><i class="fas fa-fire"></i>Trending</div>
-        </div>
+    <div class="market-card" onclick="selectMarket('GetGems')">
+        <i class="fas fa-gem"></i>GetGems
+    </div>
+    <div class="market-card" onclick="selectMarket('XPlus')">
+        <i class="fas fa-bolt"></i>XPlus
+    </div>
+    <div class="market-card" onclick="selectMarket('Fragment')">
+        <i class="fas fa-fragment"></i>Fragment
+    </div>
+    <div class="market-card" onclick="selectMarket('Trending')">
+        <i class="fas fa-fire"></i>Trending
+    </div>
+</div>
     </div>
 
     <div id="profile" class="tab-content">
@@ -155,6 +163,19 @@
         if (el) el.classList.add('active');
         tg.HapticFeedback.impactOccurred('medium');
     }
+    // Функция для выбора маркета
+function selectMarket(name) {
+    tg.HapticFeedback.notificationOccurred('success');
+    
+    // Показываем уведомление внутри TG
+    tg.showConfirm(`Вы выбрали ${name}. Запустить сканирование лотов?`, (confirmed) => {
+        if (confirmed) {
+            // Здесь будет логика запроса к бэкенду
+            console.log(`Сканируем ${name}...`);
+            // Можно вызвать функцию загрузки данных: fetchNFTs(name);
+        }
+    });
+}
 
     function depositTON() {
         const wallet = "UQByH...ТВОЙ_АДРЕС"; // ВСТАВЬ СВОЙ АДРЕС
