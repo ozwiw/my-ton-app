@@ -157,30 +157,39 @@
         </nav>
     </div>
 
-    <script>
+   <script>
     let tg = window.Telegram.WebApp;
     tg.expand();
 
-    // ТВОЯ ССЫЛКА ИЗ NGROK (МЕНЯЙ ЕЁ ТУТ, ЕСЛИ ПЕРЕЗАПУСТИЛ)
+    // ВОТ ОН, ТВОЙ АПИ УРЛ! (Замени на актуальный из ngrok)
     const API_URL = "https://unhazy-overcaustic-alicia.ngrok-free.app";
 
-    async function fetchNFTs() {
+    // Функция для загрузки баланса и NFT
+    async function loadAppData() {
         try {
-            const response = await fetch(`${API_URL}/api/trending`);
-            const data = await response.json();
-            renderNFTs(data);
+            // Запрос баланса
+            const balRes = await fetch(`${API_URL}/api/balance`);
+            const balData = await balRes.json();
+            document.getElementById('balance-value').innerText = `${balData.balance} TON`;
+
+            // Запрос списка NFT
+            const nftRes = await fetch(`${API_URL}/api/trending`);
+            const nfts = await nftRes.json();
+            renderNFTs(nfts);
+
         } catch (error) {
-            console.error("Ошибка загрузки:", error);
+            console.error("Ошибка связи:", error);
             document.getElementById('nft-list').innerHTML = "<p style='color:red; text-align:center;'>Ошибка связи с бэкендом</p>";
+            // Если связи нет, ставим 0.00
+            document.getElementById('balance-value').innerText = "0.00 TON";
         }
     }
 
     function renderNFTs(nfts) {
         const container = document.getElementById('nft-list');
-        container.innerHTML = ''; // Очищаем загрузку
-
+        container.innerHTML = '';
         nfts.forEach(nft => {
-            const card = `
+            container.innerHTML += `
                 <div class="nft-card">
                     <div class="nft-info">
                         <img src="${nft.image}" class="nft-img" onerror="this.src='https://via.placeholder.com/45'">
@@ -192,26 +201,20 @@
                             ${nft.change >= 0 ? '▲' : '▼'} ${Math.abs(nft.change)}%
                         </span>
                     </div>
-                </div>
-            `;
-            container.innerHTML += card;
+                </div>`;
         });
     }
 
-    // Запускаем загрузку при старте
-    fetchNFTs();
+    // Запускаем всё при старте
+    loadAppData();
 
-    // Твоя функция переключения табов
     function showTab(tabId) {
         document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active-tab'));
         document.getElementById(tabId).classList.add('active-tab');
-        
-        document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
-        // Добавь логику активации иконки, если нужно
     }
 
     if (tg.initDataUnsafe.user) {
-        document.getElementById('user-avatar').src = tg.initDataUnsafe.user.photo_url || "https://via.placeholder.com/40";
+        document.getElementById('user-avatar').src = tg.initDataUnsafe.user.photo_url || "";
     }
 </script>
 </body>
