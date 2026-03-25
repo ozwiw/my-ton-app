@@ -227,11 +227,11 @@
     <span>МАРКЕТ</span>
 </div>
 <div class="nav-item" onclick="showTab('sniper', this)">
-    <i class="fas fa-bullseye"></i>
+    <i class="fas fa-crosshairs"></i>
     <span>СНАЙПЕР</span>
 </div>
 <div class="nav-item" onclick="showTab('profile', this)">
-    <i class="fas fa-user"></i>
+    <i class="fas fa-user-shield"></i>
     <span>ПРОФИЛЬ</span>
 </div>
         </nav>
@@ -241,22 +241,32 @@
     let tg = window.Telegram.WebApp;
     tg.expand();
 
+    // ССЫЛКА ДОЛЖНА БЫТЬ ТАКОЙ (БЕЗ СТРЕЛОЧЕК И LOCALHOST)
     const API_URL = "https://unhazy-overcaustic-alicia.ngrok-free.dev";
 
-    // Функция переключения вкладок с подсветкой
+    // ПЕРЕКЛЮЧЕНИЕ ВКЛАДОК (Оживляем кнопки)
     function showTab(tabId, el) {
-        // Убираем активный класс у всех контентов
         document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active-tab'));
-        // Показываем нужный
         document.getElementById(tabId).classList.add('active-tab');
 
-        // Подсветка кнопок в меню
         document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
         if (el) el.classList.add('active');
+        
+        // Вибрация при нажатии (только в Telegram)
+        tg.HapticFeedback.impactOccurred('light');
+    }
+
+    // СИСТЕМА ПОПОЛНЕНИЯ
+    function depositTON() {
+        const myWallet = "UQByH...ТВОЙ_АДРЕС"; // ВСТАВЬ СВОЙ АДРЕС ТУТ
+        tg.showPopup({
+            title: 'Пополнение TON',
+            message: `Отправьте TON на этот адрес:\n\n${myWallet}`,
+            buttons: [{type: 'close', text: 'Понял'}]
+        });
     }
 
     async function updateDashboard() {
-        const nftList = document.getElementById('nft-list');
         try {
             const balRes = await fetch(`${API_URL}/api/balance`);
             const balData = await balRes.json();
@@ -266,42 +276,27 @@
             const nfts = await nftRes.json();
             renderNFTs(nfts);
         } catch (e) {
-            nftList.innerHTML = "<p style='color:#ff4444; text-align:center;'>OFFLINE</p>";
-            console.log("Server down");
+            console.log("Сервер пока спит, кнопки работают в демо-режиме");
         }
     }
 
-    // Рендер NFT
-    function renderNFTs(nfts) {
-        const container = document.getElementById('nft-list');
-        container.innerHTML = nfts.map(nft => `
-            <div class="nft-card" style="animation: fadeIn 0.5s ease;">
-                <div class="nft-info">
-                    <img src="${nft.image}" class="nft-img">
-                    <div><b>${nft.name}</b><br><small>#${nft.id}</small></div>
-                </div>
-                <div style="text-align:right"><b>${nft.floor} TON</b></div>
-            </div>
-        `).join('');
-    }
-
-    // НЕОНОВЫЕ ПАУКИ (ФОН)
+    // НЕОНОВЫЕ ПАУКИ
     const canvas = document.getElementById('spider-canvas');
     const ctx = canvas.getContext('2d');
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
     let dots = [];
-    for(let i=0; i<30; i++) dots.push({x:Math.random()*canvas.width, y:Math.random()*canvas.height, vx:(Math.random()-0.5), vy:(Math.random()-0.5)});
+    for(let i=0; i<30; i++) dots.push({x:Math.random()*canvas.width, y:Math.random()*canvas.height, vx:(Math.random()-0.5)*0.5, vy:(Math.random()-0.5)*0.5});
 
     function draw() {
         ctx.clearRect(0,0,canvas.width,canvas.height);
-        ctx.strokeStyle = "rgba(0, 229, 255, 0.15)";
+        ctx.strokeStyle = "rgba(0, 229, 255, 0.2)";
         dots.forEach(d => {
             d.x += d.vx; d.y += d.vy;
             if(d.x<0 || d.x>canvas.width) d.vx*=-1;
             if(d.y<0 || d.y>canvas.height) d.vy*=-1;
             dots.forEach(d2 => {
-                if(Math.hypot(d.x-d2.x, d.y-d2.y) < 100) {
+                if(Math.hypot(d.x-d2.x, d.y-d2.y) < 120) {
                     ctx.beginPath(); ctx.moveTo(d.x, d.y); ctx.lineTo(d2.x, d2.y); ctx.stroke();
                 }
             });
