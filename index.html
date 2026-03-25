@@ -128,13 +128,17 @@
     </div>
 
     <div id="profile" class="tab-content">
-        <h3 style="color: var(--neon-blue);">MY ACCOUNT</h3>
-        <div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 12px; border-left: 3px solid var(--neon-blue);">
-            <p id="user-name">Ruslan</p>
-            <p style="font-size: 12px; color: #888;">Статус: Active</p>
-        </div>
-        <button class="btn-deposit" onclick="depositTON()">📥 ПОПОЛНИТЬ TON</button>
+    <h3 style="color: var(--neon-blue);">MY ACCOUNT</h3>
+    <div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 12px; border-left: 3px solid var(--neon-blue); margin-bottom: 20px;">
+        <p id="user-name" style="margin:0; font-weight:bold;">Ruslan</p>
+        <p style="font-size: 12px; color: #888; margin-top:5px;">Статус: <span style="color:#00ff88;">Premium VIP</span></p>
     </div>
+    
+    <button class="btn-deposit" onclick="depositTON()" style="display:flex; align-items:center; justify-content:center; gap:10px;">
+        <i class="fa-solid fa-bolt-lightning"></i>
+        ПОПОЛНИТЬ БАЛАНС
+    </button>
+</div>
 </div>
 
 <div class="nav-bar">
@@ -198,14 +202,32 @@ async function selectMarket(name) {
     }
 }
 
-    function depositTON() {
-        const wallet = "UQByH...ТВОЙ_АДРЕС"; // ВСТАВЬ СВОЙ АДРЕС
-        tg.showPopup({
-            title: 'Пополнение',
-            message: 'Переведите TON на адрес:\n' + wallet,
-            buttons: [{type: 'ok', text: 'Понял'}]
-        });
-    }
+   function depositTON() {
+    const myWallet = "UQByH...ТВОЙ_АДРЕС"; // ВАЖНО: Вставь сюда свой реальный адрес TON
+    const amount = 1.0; // Сумма по умолчанию (можно менять)
+    const comment = "Deposit to Sniper Bot"; // Комментарий к платежу
+
+    tg.showPopup({
+        title: 'Пополнение баланса',
+        message: `Адрес для перевода:\n${myWallet}\n\nЖелаете открыть кошелек для оплаты?`,
+        buttons: [
+            {id: 'pay', type: 'default', text: '💎 Оплатить'},
+            {id: 'copy', type: 'default', text: '📋 Копировать адрес'},
+            {type: 'cancel', text: 'Отмена'}
+        ]
+    }, function(buttonId) {
+        if (buttonId === 'pay') {
+            // Формируем прямую ссылку для TON-кошельков (ton://transfer/АДРЕС)
+            const tonLink = `ton://transfer/${myWallet}?amount=${amount * 1000000000}&text=${encodeURIComponent(comment)}`;
+            tg.openTelegramLink(tonLink); 
+        }
+        if (buttonId === 'copy') {
+            // Копируем адрес в буфер обмена
+            navigator.clipboard.writeText(myWallet);
+            tg.showAlert("Адрес скопирован!");
+        }
+    });
+}
 
     async function updateData() {
         try {
