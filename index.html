@@ -157,31 +157,28 @@
         </nav>
     </div>
 
-   <script>
+  <script>
     let tg = window.Telegram.WebApp;
     tg.expand();
 
-    // ВОТ ОН, ТВОЙ АПИ УРЛ! (Замени на актуальный из ngrok)
-    const API_URL = "https://unhazy-overcaustic-alicia.ngrok-free.app";
+    // СЮДА ВСТАВЛЯЙ ССЫЛКУ ИЗ NGROK КАЖДЫЙ РАЗ ПРИ ПЕРЕЗАПУСКЕ
+    const API_URL = "https://unhazy-overcaustic-alica.ngrok-free.dev -> http://localhost:8000";
 
-    // Функция для загрузки баланса и NFT
-    async function loadAppData() {
+    async function updateDashboard() {
         try {
             // Запрос баланса
-            const balRes = await fetch(`${API_URL}/api/balance`);
-            const balData = await balRes.json();
+            const balResponse = await fetch(`${API_URL}/api/balance`);
+            const balData = await balResponse.json();
             document.getElementById('balance-value').innerText = `${balData.balance} TON`;
 
-            // Запрос списка NFT
-            const nftRes = await fetch(`${API_URL}/api/trending`);
-            const nfts = await nftRes.json();
+            // Запрос NFT
+            const nftResponse = await fetch(`${API_URL}/api/trending`);
+            const nfts = await nftResponse.json();
             renderNFTs(nfts);
 
         } catch (error) {
-            console.error("Ошибка связи:", error);
+            console.error("Ошибка обновления:", error);
             document.getElementById('nft-list').innerHTML = "<p style='color:red; text-align:center;'>Ошибка связи с бэкендом</p>";
-            // Если связи нет, ставим 0.00
-            document.getElementById('balance-value').innerText = "0.00 TON";
         }
     }
 
@@ -205,9 +202,10 @@
         });
     }
 
-    // Запускаем всё при старте
-    loadAppData();
+    // Запуск при загрузке
+    updateDashboard();
 
+    // Твоя функция переключения вкладок
     function showTab(tabId) {
         document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active-tab'));
         document.getElementById(tabId).classList.add('active-tab');
