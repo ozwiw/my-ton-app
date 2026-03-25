@@ -3,188 +3,329 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>TON GALAXY</title>
+    <title>TON GALAXY CRASH</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        :root { --neon: #00f2ff; --pink: #ff007f; --gold: #ffcc00; --bg: #050505; }
-        body { margin: 0; background: var(--bg); color: #fff; font-family: 'Segoe UI', sans-serif; overflow: hidden; }
+        :root { --neon: #00f2ff; --bg: #070707; --card: #111; --text: #eee; }
+        body { margin: 0; background: var(--bg); color: var(--text); font-family: 'Segoe UI', sans-serif; overflow: hidden; }
         
-        /* Главный контейнер */
-        .app-container { height: 100vh; display: flex; flex-direction: column; }
-        .content { flex: 1; overflow-y: auto; padding: 20px; padding-bottom: 100px; }
+        /* Основной контейнер */
+        .app { height: 100vh; display: flex; flex-direction: column; }
+        .content { flex: 1; overflow-y: auto; display: none; padding-bottom: 80px; }
+        .active { display: block; }
 
-        /* Баланс */
-        .balance-card { background: linear-gradient(180deg, #111, #000); border: 1px solid var(--neon); border-radius: 20px; padding: 20px; text-align: center; margin-bottom: 25px; box-shadow: 0 0 15px rgba(0,242,255,0.2); }
-        .balance-num { font-size: 36px; font-weight: bold; color: var(--neon); }
+        /* Хедер */
+        .header { background: #000; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #222; }
+        .bal { font-size: 20px; font-weight: bold; color: var(--neon); text-shadow: 0 0 10px var(--neon); }
 
-        /* Стили карточек игр */
-        .game-card { background: #111; border: 1px solid #222; border-radius: 25px; padding: 20px; margin-bottom: 20px; position: relative; overflow: hidden; }
-        .game-title { font-size: 18px; font-weight: bold; margin-bottom: 15px; display: flex; align-items: center; gap: 10px; }
-        .visual-box { height: 100px; background: #000; border-radius: 15px; margin-bottom: 15px; display: flex; align-items: center; justify-content: center; font-size: 40px; border: 1px inset #222; }
+        /* --- CRASH ENGINE (CANVAS) --- */
+        #crash-container { position: relative; width: 100%; height: 250px; background: #000; overflow: hidden; }
+        #crash-canvas { width: 100%; height: 100%; }
+        #mult-display { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 50px; font-weight: bold; color: #fff; text-shadow: 0 0 20px #fff; z-index: 10; }
+        #rocket-obj { position: absolute; font-size: 40px; transform: translate(-50%, 50%); z-index: 5; transition: left 0.1s linear, bottom 0.1s linear; }
 
-        /* Ввод ставки */
-        .bet-container { display: flex; align-items: center; gap: 10px; margin-bottom: 15px; }
-        .bet-input { flex: 1; background: #000; border: 1px solid #333; color: #fff; padding: 12px; border-radius: 10px; font-size: 18px; text-align: center; outline: none; }
-        .bet-input:focus { border-color: var(--neon); }
+        /* Панель управления */
+        .controls { background: var(--card); padding: 20px; border-top: 1px solid #222; }
+        .bet-input { width: 100%; background: #000; border: 1px solid #333; color: #fff; padding: 15px; border-radius: 12px; font-size: 18px; text-align: center; margin-bottom: 15px; box-sizing: border-box; }
+        .bet-input:focus { border-color: var(--neon); outline: none; }
+        
+        .btn { width: 100%; padding: 16px; border-radius: 12px; border: none; font-weight: bold; cursor: pointer; text-transform: uppercase; font-size: 15px; }
+        .btn-bet { background: #007bff; color: #fff; box-shadow: 0 4px 15px rgba(0,123,255,0.4); }
+        .btn-bet:disabled { background: #333; color: #777; box-shadow: none; }
+        .btn-cashout { background: #28a745; color: #fff; box-shadow: 0 4px 15px rgba(40,167,69,0.4); }
 
-        /* Кнопки */
-        .btn { width: 100%; padding: 15px; border-radius: 15px; border: none; font-weight: bold; cursor: pointer; text-transform: uppercase; font-size: 14px; transition: 0.2s; }
-        .btn-play { background: var(--neon); color: #000; box-shadow: 0 5px 15px rgba(0,242,255,0.3); }
-        .btn-play:active { transform: scale(0.98); }
-        .btn-pink { background: var(--pink); box-shadow: 0 5px 15px rgba(255,0,127,0.3); }
+        /* Список игроков */
+        .players-list { padding: 10px 20px; background: #0a0a0a; }
+        .player-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #1a1a1a; font-size: 14px; }
+        .p-info { display: flex; align-items: center; gap: 8px; }
+        .p-avatar { width: 25px; height: 25px; border-radius: 50%; background: #333; }
+        .stat-win { color: #28a745; font-weight: bold; }
 
         /* Навигация */
-        .nav-bar { position: fixed; bottom: 0; width: 100%; background: #000; display: flex; border-top: 1px solid #222; padding: 10px 0; }
-        .nav-item { flex: 1; text-align: center; color: #444; text-decoration: none; font-size: 11px; }
-        .nav-item.active { color: var(--neon); }
-        .nav-item i { font-size: 22px; display: block; margin-bottom: 4px; }
-
-        .hidden { display: none; }
+        .nav { position: fixed; bottom: 0; width: 100%; background: #000; display: flex; border-top: 1px solid #222; padding: 10px 0; }
+        .nav-item { flex: 1; text-align: center; color: #555; text-decoration: none; font-size: 11px; }
+        .nav-item.active-nav { color: var(--neon); }
+        .nav-item i { font-size: 20px; display: block; margin-bottom: 5px; }
     </style>
 </head>
 <body>
 
-<div class="app-container">
-    <div class="content">
-        <div class="balance-card">
-            <small style="color:#777">GALAXY WALLET</small>
-            <div class="balance-num" id="user-balance">100.00 TON</div>
+<div class="app">
+    <div class="header">
+        <div style="font-size: 12px; color: #888;">TON GALAXY</div>
+        <div class="bal" id="header-bal">100.00 TON</div>
+    </div>
+
+    <div id="scr-crash" class="content active">
+        <div id="crash-container">
+            <canvas id="crash-canvas"></canvas>
+            <div id="rocket-obj">🚀</div>
+            <div id="mult-display">1.00x</div>
         </div>
 
-        <div id="tab-games">
-            <h2 style="margin-bottom:20px">🌌 ACTIVE GAMES</h2>
-
-            <div class="game-card">
-                <div class="game-title" style="color: var(--neon)"><i class="fas fa-circle-notch"></i> NEON SPHERE</div>
-                <div class="visual-box" id="sphere-box">🔮</div>
-                <div class="bet-container">
-                    <input type="number" class="bet-input" id="bet-sphere" value="10" placeholder="TON">
-                </div>
-                <button class="btn btn-play" onclick="playGame('sphere')">УГАДАТЬ ЦВЕТ (X2.0)</button>
-            </div>
-
-            <div class="game-card">
-                <div class="game-title" style="color: var(--pink)"><i class="fas fa-dot-circle"></i> BLACK HOLE</div>
-                <div class="visual-box" id="hole-box">🌑</div>
-                <div class="bet-container">
-                    <input type="number" class="bet-input" id="bet-hole" value="5" placeholder="TON">
-                </div>
-                <button class="btn btn-play btn-pink" onclick="playGame('hole')">РИСКНУТЬ (X1.1 - X5.0)</button>
-            </div>
-
-            <div class="game-card">
-                <div class="game-title" style="color: var(--gold)"><i class="fas fa-wave-square"></i> PULSE LINE</div>
-                <div class="visual-box" id="pulse-box">📈</div>
-                <div class="bet-container">
-                    <input type="number" class="bet-input" id="bet-pulse" value="20" placeholder="TON">
-                </div>
-                <button class="btn btn-play" style="background:var(--gold)" onclick="playGame('pulse')">ПОЙМАТЬ ИМПУЛЬС</button>
-            </div>
+        <div class="controls">
+            <input type="number" class="bet-input" id="bet-amount" value="10" step="1">
+            <button class="btn btn-bet" id="btn-action" onclick="actionBtn()">Сделать ставку</button>
         </div>
 
-        <div id="tab-profile" class="hidden">
-            <h2 style="margin-bottom:20px">👤 USER PROFILE</h2>
-            <div class="game-card">
-                <h3 id="display-name">Пидор</h3>
-                <p style="color: #0f8">Status: Galaxy Elite</p>
-                <hr style="border: 0.5px solid #222; margin: 20px 0;">
-                <button class="btn btn-play" onclick="depositMoney()">📥 ПОПОЛНИТЬ ЧЕРЕЗ КОШЕЛЕК</button>
+        <div class="players-list" id="players">
+            <div style="color: #555; font-size: 12px; margin-bottom: 10px;">ИГРОКИ В РАУНДЕ</div>
             </div>
+    </div>
+
+    <div id="scr-profile" class="content" style="padding: 20px;">
+        <h2>👤 ПРОФИЛЬ</h2>
+        <div style="background:var(--card); padding: 20px; border-radius: 15px; border: 1px solid #222;">
+            <b id="user-name">User</b><br>
+            <small style="color: #0f8;">Status: VIP Explored</small>
+            <button class="btn btn-bet" style="margin-top: 20px; background:var(--neon); color:#000;" onclick="deposit()">ПОПОЛНИТЬ</button>
         </div>
     </div>
 
-    <div class="nav-bar">
-        <a href="#" class="nav-item active" onclick="switchTab('games', this)">
-            <i class="fas fa-gamepad"></i>GAMES
-        </a>
-        <a href="#" class="nav-item" onclick="switchTab('profile', this)">
-            <i class="fas fa-user-astronaut"></i>PROFILE
-        </a>
-    </div>
+    <nav class="nav">
+        <a href="#" class="nav-item active-nav" onclick="tab('crash', this)"><i class="fas fa-rocket"></i>CRASH</a>
+        <a href="#" class="nav-item" onclick="tab('profile', this)"><i class="fas fa-user"></i>PROFILE</a>
+    </nav>
 </div>
 
 <script>
     let tg = window.Telegram.WebApp;
     tg.expand();
 
-    // ЗАМЕНИ НА СВОЙ NGROK (ТОЛЬКО ССЫЛКУ!)
-    const API_URL = "https://ТВОЙ-ССЫЛКА.ngrok-free.app";
+    // СЮДА ССЫЛКУ ИЗ NGROK
+    const API = "https://ТВОЙ-NGROK.ngrok-free.app";
+    const MY_WALLET = "UQBtkrIzQeK1bfSJD9N71EcvCJwnegvLs3t-fLuGgmLESSL4";
 
-    function switchTab(tab, el) {
-        document.getElementById('tab-games').classList.toggle('hidden', tab !== 'games');
-        document.getElementById('tab-profile').classList.toggle('hidden', tab !== 'profile');
-        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-        el.classList.add('active');
-        tg.HapticFeedback.impactOccurred('medium');
+    // --- CRASH ENGINE ---
+    const canvas = document.getElementById('crash-canvas');
+    const ctx = canvas.getContext('2d');
+    const rocketObj = document.getElementById('rocket-obj');
+    const multDisplay = document.getElementById('mult-display');
+    const btnAction = document.getElementById('btn-action');
+
+    // Настройка Canvas под размер экрана
+    function resizeCanvas() {
+        canvas.width = canvas.parentElement.offsetWidth;
+        canvas.height = canvas.parentElement.offsetHeight;
     }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
 
-    // ЛОГИКА ИГР
-    async function playGame(type) {
-        const bet = document.getElementById(`bet-${type}`).value;
-        const box = document.getElementById(`${type}-box`);
+    let gameState = 'waiting'; // waiting, playing, crashed
+    let currentMult = 1.00;
+    let crashPoint = 0;
+    let gameLoop;
+    let startTime;
+    let isBetted = False;
+
+    // Отрисовка графика
+    function drawChart(t) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
         
-        if (bet <= 0) {
-            tg.showAlert("Введите нормальную ставку!");
-            return;
+        // Сетка
+        ctx.strokeStyle = '#1a1a1a';
+        ctx.lineWidth = 1;
+        for(let i=1; i<5; i++) {
+            // Вертикальные
+            ctx.beginPath(); ctx.moveTo(i * (canvas.width/5), 0); ctx.lineTo(i * (canvas.width/5), canvas.height); ctx.stroke();
+            // Горизонтальные
+            ctx.beginPath(); ctx.moveTo(0, i * (canvas.height/5)); ctx.lineTo(canvas.width, i * (canvas.height/5)); ctx.stroke();
         }
 
-        tg.HapticFeedback.impactOccurred('heavy');
-        box.innerHTML = "🌀"; // Анимация кручения
+        // Кривая графика (Экспонента)
+        ctx.strokeStyle = gameState === 'crashed' ? '#ff4444' : 'rgba(0, 242, 255, 0.7)';
+        ctx.lineWidth = 4;
+        ctx.shadowColor = gameState === 'crashed' ? '#ff4444' : 'var(--neon)';
+        ctx.shadowBlur = 15;
         
-        try {
-            // Стучимся в твой прекрасный big.py
-            const response = await fetch(`${API_URL}/api/play/${type}?bet=${bet}`);
-            const data = await response.json();
+        ctx.beginPath();
+        ctx.moveTo(0, canvas.height);
+        
+        // Рисуем кривую на основе времени t
+        for(let x=0; x<t; x+=2) {
+            // Формула роста: y растет экспоненциально от x
+            let y = canvas.height - (Math.pow(1.0015, x) * 10 - 10);
+            if (y < 0) y = 0;
+            ctx.lineTo(x, y);
+        }
+        ctx.stroke();
+        ctx.shadowBlur = 0; // Сброс тени
+    }
+
+    // Движение ракеты
+    function moveRocket(t) {
+        let x = t;
+        let y = Math.pow(1.0015, x) * 10 - 10;
+        
+        // Проценты от размера контейнера
+        let leftPercent = (x / canvas.width) * 100;
+        let bottomPercent = (y / canvas.height) * 100;
+
+        // Ограничиваем, чтобы не улетала за край
+        if(leftPercent > 90) leftPercent = 90;
+        if(bottomPercent > 90) bottomPercent = 90;
+
+        rocketObj.style.left = leftPercent + '%';
+        rocketObj.style.bottom = bottomPercent + '%';
+        // Угол наклона
+        rocketObj.style.transform = `translate(-50%, 50%) rotate(${-bottomPercent/2}deg)`;
+    }
+
+    // --- ИГРОВОЙ ЦИКЛ ---
+    function startGame(crashAt) {
+        gameState = 'playing';
+        crashPoint = crashAt;
+        currentMult = 1.00;
+        startTime = Date.now();
+        multDisplay.style.color = '#fff';
+        rocketObj.innerText = "🚀";
+        
+        if(isBetted) {
+            btnAction.innerText = "ЗАБРАТЬ";
+            btnAction.className = "btn btn-cashout";
+        } else {
+            btnAction.innerText = "ПОДЧЕК... (" + currentMult.toFixed(2) + "x)";
+            btnAction.disabled = True;
+        }
+
+        // Запуск списка игроков (имитация)
+        renderPlayers(true);
+
+        gameLoop = setInterval(() => {
+            // Рассчитываем икс на основе времени (2% роста в секунду)
+            let timePassed = (Date.now() - startTime) / 1000;
+            currentMult = Math.pow(1.06, timePassed);
             
-            setTimeout(() => {
-                if(data.win || data.mult > 1.5) {
-                    box.innerHTML = "💎";
-                    tg.showAlert(`ПОБЕДА! Баланс обновлен.`);
-                } else {
-                    box.innerHTML = "💥";
-                    tg.showAlert(`ПРОИГРЫШ. Попробуй еще раз!`);
-                }
-                updateBalanceUI();
-            }, 1000);
-        } catch (e) {
-            tg.showAlert("Ошибка связи с сервером");
-            box.innerHTML = "❌";
+            // Обновляем UI
+            multDisplay.innerText = currentMult.toFixed(2) + "x";
+            
+            // Время переводим в пиксели для отрисовки
+            let t = timePassed * 25; 
+            drawChart(t);
+            moveRocket(t);
+
+            // Если играешь и ставка сделана, обновляем кнопку
+            if(isBetted && gameState === 'playing') {
+                btnAction.innerText = "ЗАБРАТЬ " + (document.getElementById('bet-amount').value * currentMult).toFixed(2);
+            }
+
+            // CRASH!
+            if (currentMult >= crashPoint) {
+                endGame(false);
+            }
+        }, 50); // 20 кадров в секунду
+    }
+
+    function endGame(isCashout) {
+        clearInterval(gameLoop);
+        gameState = 'crashed';
+        drawChart((Date.now() - startTime) / 1000 * 25); // Рисуем финальный красный график
+        
+        if (isCashout) {
+            rocketObj.innerText = "💰";
+            multDisplay.style.color = "#28a745";
+            multDisplay.innerText = "WIN " + currentMult.toFixed(2) + "x";
+            tg.HapticFeedback.notificationOccurred('success');
+        } else {
+            rocketObj.innerText = "💥";
+            multDisplay.style.color = "#ff4444";
+            multDisplay.innerText = "CRASH " + crashPoint.toFixed(2) + "x";
+            tg.HapticFeedback.notificationOccurred('error');
+        }
+
+        isBetted = False;
+        renderPlayers(false, isCashout ? currentMult : 0); // Обновляем список игроков
+
+        setTimeout(() => {
+            resetToWaiting();
+        }, 3000);
+    }
+
+    function resetToWaiting() {
+        gameState = 'waiting';
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        rocketObj.style.bottom = '0';
+        rocketObj.style.left = '10%';
+        rocketObj.innerText = "🚀";
+        multDisplay.innerText = "ОЖИДАНИЕ";
+        multDisplay.style.color = "#555";
+        btnAction.innerText = "Сделать ставку";
+        btnAction.className = "btn btn-bet";
+        btnAction.disabled = False;
+        document.getElementById('players').innerHTML = '<div style="color: #555; font-size: 12px; margin-bottom: 10px;">ОЖИДАНИЕ СЛЕДУЮЩЕГО РАУНДА</div>';
+        
+        // Имитация: через 5 сек бэкенд дает команду на старт
+        setTimeout(async () => {
+            if(gameState === 'waiting') {
+                const res = await fetch(`${API}/api/play/rocket?bet=0`); // Тестовый запрос
+                const data = await res.json();
+                startGame(data.crash_at);
+            }
+        }, 4000);
+    }
+
+    // Логика кнопки
+    function actionBtn() {
+        if(gameState === 'waiting' && !isBetted) {
+            // Ставка
+            isBetted = True;
+            btnAction.innerText = "СТАВКА ПРИНЯТА";
+            btnAction.disabled = True;
+            tg.HapticFeedback.impactOccurred('medium');
+        } else if (gameState === 'playing' && isBetted) {
+            // Кэшаут
+            endGame(true);
         }
     }
 
-    // ПОПОЛНЕНИЕ ВНУТРИ АПКИ
-    function depositMoney() {
-        tg.showPopup({
-            title: 'Пополнение',
-            message: 'Введите сумму в TON, которую хотите внести на баланс:',
-            buttons: [{id: 'ok', type: 'default', text: 'Ввести сумму'}]
-        }, (btnId) => {
-            if (btnId === 'ok') {
-                const amount = prompt("Сумма TON:", "10");
-                if (amount) {
-                    // Генерируем ссылку для открытия кошелька
-                    const walletAddr = "UQBtkrIzQeK1bfSJD9N71EcvCJwnegvLs3t-fLuGgmLESSL4"; // ВСТАВЬ СВОЙ АДРЕС
-                    const tonLink = `ton://transfer/${walletAddr}?amount=${amount * 1000000000}&text=GalaxyDeposit`;
-                    tg.openLink(tonLink);
+    // Имитация списка игроков
+    function renderPlayers(isStart, winMult=0) {
+        const pList = document.getElementById('players');
+        if(isStart) {
+            pList.innerHTML = '<div style="color: #555; font-size: 12px; margin-bottom: 10px;">ИГРОКИ В РАУНДЕ</div>';
+            const names = ["Nemo", "ELLSHATO", "Ruslan (You)", "kayxd3"];
+            names.forEach(name => {
+                let bet = (Math.random() * 5 + 1).toFixed(1);
+                pList.innerHTML += `<div class="player-row" id="p-${name}">
+                    <div class="p-info"><div class="p-avatar"></div>${name}</div>
+                    <div class="p-stats">${bet} TON <span class="p-m"></span></div>
+                </div>`;
+            });
+        } else {
+            // Конец раунда: Ruslan выиграл (если кэшаут), остальные проиграли (рандом)
+            document.querySelectorAll('.player-row').forEach(row => {
+                if(row.id === 'p-Ruslan (You)' && winMult > 0) {
+                    row.querySelector('.p-m').innerHTML = `<span class="stat-win">${winMult.toFixed(2)}x</span>`;
+                } else if (Math.random() > 0.5) {
+                    row.querySelector('.p-m').innerHTML = `<span style="color:#888">${(Math.random()+1).toFixed(2)}x</span>`;
+                } else {
+                    row.querySelector('.p-m').innerHTML = `<span style="color:#ff4444">💥</span>`;
                 }
-            }
-        });
+            });
+        }
     }
 
-    async function updateBalanceUI() {
-        try {
-            const res = await fetch(`${API_URL}/api/balance`);
-            const data = await res.json();
-            document.getElementById('user-balance').innerText = data.balance.toFixed(2) + " TON";
-        } catch(e) {}
+
+    // --- НАВИГАЦИЯ И ПРОЧЕЕ ---
+    function tab(name, el) {
+        document.querySelectorAll('.content').forEach(c => c.classList.remove('active'));
+        document.getElementById('scr-' + name).classList.add('active');
+        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active-nav'));
+        el.classList.add('active-nav');
     }
 
-    // Инициализация
-    if(tg.initDataUnsafe.user) {
-        document.getElementById('display-name').innerText = tg.initDataUnsafe.user.first_name;
+    function deposit() {
+        const amount = prompt("Сумма TON:", "10");
+        if(amount) tg.openLink(`ton://transfer/${MY_WALLET}?amount=${amount * 1000000000}&text=DepositGalaxy`);
     }
-    updateBalanceUI();
+
+    // Стартовый баланс
+    document.getElementById('header-bal').innerText = "120.50 TON";
+    if(tg.initDataUnsafe.user) document.getElementById('user-name').innerText = tg.initDataUnsafe.user.first_name;
+    
+    // Запуск имитации через 2 сек
+    setTimeout(resetToWaiting, 1000);
+
 </script>
-
 </body>
 </html>
