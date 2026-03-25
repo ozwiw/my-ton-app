@@ -163,18 +163,39 @@
         if (el) el.classList.add('active');
         tg.HapticFeedback.impactOccurred('medium');
     }
-    // Функция для выбора маркета
-function selectMarket(name) {
-    tg.HapticFeedback.notificationOccurred('success');
+async function selectMarket(name) {
+    tg.HapticFeedback.impactOccurred('heavy');
+    const list = document.getElementById('nft-list');
     
-    // Показываем уведомление внутри TG
-    tg.showConfirm(`Вы выбрали ${name}. Запустить сканирование лотов?`, (confirmed) => {
-        if (confirmed) {
-            // Здесь будет логика запроса к бэкенду
-            console.log(`Сканируем ${name}...`);
-            // Можно вызвать функцию загрузки данных: fetchNFTs(name);
-        }
-    });
+    // Показываем статус сканирования
+    list.innerHTML = `<div style="text-align:center; color:var(--neon-blue); padding:20px;">
+        <i class="fas fa-spinner fa-spin"></i> СКАНИРУЕМ ${name.toUpperCase()}...
+    </div>`;
+
+    // Переключаем на вкладку Маркет, чтобы видеть результат
+    showTab('market', document.querySelector('.nav-item'));
+
+    try {
+        const response = await fetch(`${API_URL}/api/snipe/${name}`);
+        const nfts = await response.json();
+        
+        // Рисуем найденные лоты
+        list.innerHTML = nfts.map(nft => `
+            <div class="nft-card" style="border-left: 3px solid #00ff88; margin-bottom:10px;">
+                <div class="nft-info">
+                    <img src="${nft.image}" class="nft-img" onerror="this.src='https://via.placeholder.com/45'">
+                    <div><b>${nft.name}</b><br><small>#${nft.id}</small></div>
+                </div>
+                <div style="text-align:right">
+                    <b style="color:#00ff88;">${nft.floor} TON</b><br>
+                    <span style="font-size:10px; color:#888;">LOW PRICE!</span>
+                </div>
+            </div>
+        `).join('');
+        
+    } catch (e) {
+        list.innerHTML = "<p style='color:red; text-align:center;'>Ошибка сканера</p>";
+    }
 }
 
     function depositTON() {
