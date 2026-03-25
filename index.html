@@ -2,309 +2,206 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>MRKT Sniper Elite</title>
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Sniper Elite</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         :root {
-            --bg-color: #050505;
             --neon-blue: #00e5ff;
-            --neon-shadow: 0 0 10px #00e5ff, 0 0 20px #00e5ff;
-            --gray-text: #888;
+            --bg-dark: #050505;
+            --card-bg: rgba(20, 20, 20, 0.8);
+            --neon-shadow: 0 0 10px rgba(0, 229, 255, 0.5);
         }
 
         body {
-            background-color: var(--bg-color);
+            margin: 0; padding: 0;
+            background-color: var(--bg-dark);
             color: white;
-            font-family: 'Segoe UI', Roboto, sans-serif;
-            margin: 0;
-            padding: 0;
+            font-family: 'Segoe UI', sans-serif;
             overflow: hidden;
         }
 
-        /* Верхняя панель: Баланс и Ава */
-        .header {
+        /* Неоновые пауки на фоне */
+        #spider-canvas {
+            position: fixed; top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: -1;
+        }
+
+        .container { padding: 20px; padding-bottom: 80px; }
+
+        /* Шапка с балансом */
+        .balance-box {
+            background: var(--card-bg);
+            border: 1px solid #333;
+            border-radius: 15px;
+            padding: 15px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 15px 20px;
-            border-bottom: 1px solid #1a1a1a;
-        }
-
-        .balance-box {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .balance-label { font-size: 12px; color: var(--gray-text); }
-        .balance-value { font-size: 20px; font-weight: bold; text-shadow: var(--neon-shadow); }
-
-        .profile-btn {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            border: 2px solid var(--neon-blue);
             box-shadow: var(--neon-shadow);
-            cursor: pointer;
-            overflow: hidden;
+            margin-bottom: 25px;
         }
 
-        /* Основной контент (Вкладки) */
-        .content {
-            height: calc(100vh - 140px);
-            overflow-y: auto;
-            padding: 20px;
-        }
+        .balance-value { font-size: 24px; font-weight: bold; color: var(--neon-blue); }
 
-        .tab-content { display: none; }
+        /* Вкладки */
+        .tab-content { display: none; animation: fadeIn 0.4s ease; }
         .active-tab { display: block; }
 
-        /* Карточка NFT как на скрине */
-        .nft-card {
-            background: #111;
-            border-radius: 12px;
-            padding: 15px;
-            margin-bottom: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            border-left: 3px solid var(--neon-blue);
-        }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        .nft-info { display: flex; align-items: center; gap: 10px; }
-        .nft-img { width: 45px; height: 45px; border-radius: 8px; background: #222; }
-        .price-up { color: #00ff88; font-size: 14px; }
-        .price-down { color: #ff4444; font-size: 14px; }
+        /* Снайпер: Маркетплейсы */
+        .market-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; }
+        .market-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid #333;
+            padding: 15px;
+            border-radius: 12px;
+            text-align: center;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        .market-card:active { border-color: var(--neon-blue); transform: scale(0.95); }
+        .market-card i { font-size: 24px; margin-bottom: 8px; display: block; }
 
         /* Нижнее меню */
-        .bottom-nav {
-            position: fixed;
-            bottom: 0;
-            width: 100%;
-            height: 70px;
-            background: #0a0a0a;
-            display: flex;
-            justify-content: space-around;
-            align-items: center;
-            border-top: 1px solid #222;
+        .nav-bar {
+            position: fixed; bottom: 0; width: 100%;
+            background: rgba(10, 10, 10, 0.95);
+            display: flex; justify-content: space-around;
+            padding: 15px 0; border-top: 1px solid #222;
         }
 
-        .nav-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            color: var(--gray-text);
-            font-size: 10px;
+        .nav-item { color: #555; text-align: center; transition: 0.3s; cursor: pointer; }
+        .nav-item.active { color: var(--neon-blue); text-shadow: var(--neon-shadow); transform: translateY(-3px); }
+        .nav-item i { font-size: 20px; }
+        .nav-item span { font-size: 10px; display: block; margin-top: 4px; font-weight: bold; }
+
+        /* Кнопка пополнения */
+        .btn-deposit {
+            width: 100%; padding: 15px;
+            background: transparent;
+            border: 2px solid var(--neon-blue);
+            color: var(--neon-blue);
+            border-radius: 12px;
+            font-weight: bold;
+            margin-top: 20px;
             cursor: pointer;
-        }
-
-        .nav-item.active { color: var(--neon-blue); text-shadow: var(--neon-shadow); }
-        .nav-icon { font-size: 24px; margin-bottom: 4px; }
-
-        /* Фоновые пауки */
-#spider-canvas {
-    position: fixed;
-    top: 0; left: 0;
-    width: 100%; height: 100%;
-    z-index: -1;
-    background: radial-gradient(circle, #0a0a0a 0%, #000 100%);
-}
-
-/* Анимация подсветки иконок */
-.nav-item {
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    position: relative;
-}
-
-.nav-item.active {
-    color: var(--neon-blue);
-    transform: translateY(-5px);
-    text-shadow: 0 0 15px var(--neon-blue);
-}
-
-.nav-item.active::after {
-    content: '';
-    position: absolute;
-    bottom: -10px;
-    width: 20px;
-    height: 2px;
-    background: var(--neon-blue);
-    box-shadow: var(--neon-shadow);
-}
-
-/* Выбор маркетплейсов */
-.market-selector {
-    display: flex;
-    gap: 10px;
-    margin-bottom: 20px;
-    overflow-x: auto;
-    padding-bottom: 5px;
-}
-
-.market-chip {
-    padding: 8px 15px;
-    background: #1a1a1a;
-    border: 1px solid #333;
-    border-radius: 20px;
-    font-size: 12px;
-    white-space: nowrap;
-    cursor: pointer;
-}
-
-.market-chip.selected {
-    border-color: var(--neon-blue);
-    color: var(--neon-blue);
-    box-shadow: inset 0 0 10px rgba(0, 229, 255, 0.2);
-}
-
-        /* Кнопка назад */
-        .back-btn {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            color: var(--gray-text);
-            cursor: pointer;
-            z-index: 100;
         }
     </style>
 </head>
 <body>
 
-    <div id="main-screen">
-        <div class="header">
-            <div class="balance-box">
-                <span class="balance-label">TON BALANCE</span>
-                <span class="balance-value" id="user-balance">0.00 TON</span>
-            </div>
-            <div class="profile-btn" onclick="showTab('profile')">
-                <img id="user-avatar" src="" style="width:100%; height:100%; object-fit: cover;">
-            </div>
+<canvas id="spider-canvas"></canvas>
+
+<div class="container">
+    <div class="balance-box">
+        <div>
+            <div style="font-size: 10px; color: #888;">MY BALANCE</div>
+            <div class="balance-value" id="balance-value">0.00 TON</div>
         </div>
-
-        <div class="content">
-            <div id="market" class="tab-content active-tab">
-    <h3 style="color: var(--neon-blue)">Trending NFTs</h3>
-    <div id="nft-list">
-        <p style="text-align:center; color:#555;">Загрузка данных...</p>
-        <canvas id="spider-canvas"></canvas>
-
-<div id="market" class="tab-content active-tab">
-    <div class="market-selector">
-        <div class="market-chip selected">ALL</div>
-        <div class="market-chip">GETGEMS</div>
-        <div class="market-chip">XPLUS</div>
-        <div class="market-chip">FRAGMENT</div>
+        <i class="fa-solid fa-circle-nodes" style="color: var(--neon-blue); font-size: 24px;"></i>
     </div>
-    <h3 style="color: var(--neon-blue); letter-spacing: 2px;">LIVE FEED</h3>
-    <div id="nft-list"></div>
-</div>
 
-<div id="profile" class="tab-content">
-    <div class="back-btn" onclick="showTab('market')">← ESC</div>
-    <div style="text-align: center; margin-top: 40px;">
-        <div class="balance-value" id="profile-balance" style="font-size: 32px;">0.00 TON</div>
-        <p style="color: var(--gray-text);">Wallet Not Connected</p>
+    <div id="market" class="tab-content active-tab">
+        <h3 style="color: var(--neon-blue);">LIVE FEED</h3>
+        <div id="nft-list"><p style="color:#555">Waiting for connection...</p></div>
     </div>
-    
-    <button onclick="depositTON()" style="width:100%; padding:18px; margin-top:20px; background:transparent; border: 2px solid var(--neon-blue); color: var(--neon-blue); border-radius:12px; font-weight:bold; text-transform:uppercase; cursor:pointer; transition: 0.3s;" onmouseover="this.style.background='rgba(0,229,255,0.1)'" onmouseout="this.style.background='transparent'">
-        📥 Пополнить TON
-    </button>
-</div>
-    </div>
-</div>
 
-            <div id="profile" class="tab-content">
-                <div class="back-btn" onclick="showTab('market')">← Назад</div>
-                <h2 style="margin-top: 50px; text-align: center;">Мой Профиль</h2>
-                <button style="width:100%; padding:15px; margin-bottom:10px; background:var(--neon-blue); border:none; border-radius:10px; font-weight:bold;">Пополнить TON</button>
-                <button style="width:100%; padding:15px; background:#222; color:white; border:none; border-radius:10px;">Подключить Tonkeeper</button>
-            </div>
+    <div id="sniper" class="tab-content">
+        <h3 style="color: var(--neon-blue);">SELECT MARKETPLACE</h3>
+        <div class="market-grid">
+            <div class="market-card"><i class="fas fa-gem"></i>GetGems</div>
+            <div class="market-card"><i class="fas fa-bolt"></i>XPlus</div>
+            <div class="market-card"><i class="fas fa-fragment"></i>Fragment</div>
+            <div class="market-card"><i class="fas fa-fire"></i>Trending</div>
         </div>
-
-        <nav class="bottom-nav">
-            <div class="nav-item active" onclick="showTab('market', this)">
-    <i class="fas fa-store"></i>
-    <span>МАРКЕТ</span>
-</div>
-<div class="nav-item" onclick="showTab('sniper', this)">
-    <i class="fas fa-crosshairs"></i>
-    <span>СНАЙПЕР</span>
-</div>
-<div class="nav-item" onclick="showTab('profile', this)">
-    <i class="fas fa-user-shield"></i>
-    <span>ПРОФИЛЬ</span>
-</div>
-        </nav>
     </div>
 
-  <script>
+    <div id="profile" class="tab-content">
+        <h3 style="color: var(--neon-blue);">MY ACCOUNT</h3>
+        <div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 12px; border-left: 3px solid var(--neon-blue);">
+            <p id="user-name">Ruslan</p>
+            <p style="font-size: 12px; color: #888;">Статус: Active</p>
+        </div>
+        <button class="btn-deposit" onclick="depositTON()">📥 ПОПОЛНИТЬ TON</button>
+    </div>
+</div>
+
+<div class="nav-bar">
+    <div class="nav-item active" onclick="showTab('market', this)">
+        <i class="fas fa-store"></i><span>МАРКЕТ</span>
+    </div>
+    <div class="nav-item" onclick="showTab('sniper', this)">
+        <i class="fas fa-crosshairs"></i><span>СНАЙПЕР</span>
+    </div>
+    <div class="nav-item" onclick="showTab('profile', this)">
+        <i class="fas fa-user-shield"></i><span>ПРОФИЛЬ</span>
+    </div>
+</div>
+
+<script>
     let tg = window.Telegram.WebApp;
     tg.expand();
 
-    // ССЫЛКА ДОЛЖНА БЫТЬ ТАКОЙ (БЕЗ СТРЕЛОЧЕК И LOCALHOST)
+    // ИСПРАВЬ ЭТУ ССЫЛКУ НА СВОЮ ИЗ NGROK (без лишних слов!)
     const API_URL = "https://unhazy-overcaustic-alicia.ngrok-free.dev";
 
-    // ПЕРЕКЛЮЧЕНИЕ ВКЛАДОК (Оживляем кнопки)
     function showTab(tabId, el) {
-        document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active-tab'));
+        document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active-tab'));
         document.getElementById(tabId).classList.add('active-tab');
-
-        document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+        document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
         if (el) el.classList.add('active');
-        
-        // Вибрация при нажатии (только в Telegram)
-        tg.HapticFeedback.impactOccurred('light');
+        tg.HapticFeedback.impactOccurred('medium');
     }
 
-    // СИСТЕМА ПОПОЛНЕНИЯ
     function depositTON() {
-        const myWallet = "UQByH...ТВОЙ_АДРЕС"; // ВСТАВЬ СВОЙ АДРЕС ТУТ
+        const wallet = "UQByH...ТВОЙ_АДРЕС"; // ВСТАВЬ СВОЙ АДРЕС
         tg.showPopup({
-            title: 'Пополнение TON',
-            message: `Отправьте TON на этот адрес:\n\n${myWallet}`,
-            buttons: [{type: 'close', text: 'Понял'}]
+            title: 'Пополнение',
+            message: 'Переведите TON на адрес:\n' + wallet,
+            buttons: [{type: 'ok', text: 'Понял'}]
         });
     }
 
-    async function updateDashboard() {
+    async function updateData() {
         try {
-            const balRes = await fetch(`${API_URL}/api/balance`);
-            const balData = await balRes.json();
-            document.getElementById('balance-value').innerText = `${balData.balance} TON`;
-
-            const nftRes = await fetch(`${API_URL}/api/trending`);
-            const nfts = await nftRes.json();
-            renderNFTs(nfts);
-        } catch (e) {
-            console.log("Сервер пока спит, кнопки работают в демо-режиме");
-        }
+            const res = await fetch(`${API_URL}/api/balance`);
+            const data = await res.json();
+            document.getElementById('balance-value').innerText = data.balance + " TON";
+            // Тут можно добавить и отрисовку NFT
+        } catch(e) { console.log("Offline mode"); }
     }
 
-    // НЕОНОВЫЕ ПАУКИ
+    // РИСУЕМ ПАУКОВ
     const canvas = document.getElementById('spider-canvas');
     const ctx = canvas.getContext('2d');
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-    let dots = [];
-    for(let i=0; i<30; i++) dots.push({x:Math.random()*canvas.width, y:Math.random()*canvas.height, vx:(Math.random()-0.5)*0.5, vy:(Math.random()-0.5)*0.5});
+    canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+    let particles = [];
+    for(let i=0; i<35; i++) particles.push({x: Math.random()*canvas.width, y: Math.random()*canvas.height, vx: (Math.random()-0.5)*0.6, vy: (Math.random()-0.5)*0.6});
 
     function draw() {
         ctx.clearRect(0,0,canvas.width,canvas.height);
-        ctx.strokeStyle = "rgba(0, 229, 255, 0.2)";
-        dots.forEach(d => {
-            d.x += d.vx; d.y += d.vy;
-            if(d.x<0 || d.x>canvas.width) d.vx*=-1;
-            if(d.y<0 || d.y>canvas.height) d.vy*=-1;
-            dots.forEach(d2 => {
-                if(Math.hypot(d.x-d2.x, d.y-d2.y) < 120) {
-                    ctx.beginPath(); ctx.moveTo(d.x, d.y); ctx.lineTo(d2.x, d2.y); ctx.stroke();
-                }
+        ctx.strokeStyle = "rgba(0, 229, 255, 0.15)";
+        ctx.lineWidth = 1;
+        particles.forEach((p, i) => {
+            p.x += p.vx; p.y += p.vy;
+            if(p.x<0 || p.x>canvas.width) p.vx*=-1;
+            if(p.y<0 || p.y>canvas.height) p.vy*=-1;
+            particles.slice(i).forEach(p2 => {
+                let d = Math.hypot(p.x-p2.x, p.y-p2.y);
+                if(d < 110) { ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(p2.x, p2.y); ctx.stroke(); }
             });
         });
         requestAnimationFrame(draw);
     }
     draw();
-    updateDashboard();
+    updateData();
+
+    if(tg.initDataUnsafe.user) {
+        document.getElementById('user-name').innerText = tg.initDataUnsafe.user.first_name;
+    }
 </script>
 </body>
 </html>
