@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>MRKT Sniper Elite</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        :root {
+            --bg-color: #050505;
+            --neon-blue: #00e5ff;
+            --neon-shadow: 0 0 10px #00e5ff, 0 0 20px #00e5ff;
+            --gray-text: #888;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: white;
+            font-family: 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+
+        /* Верхняя панель: Баланс и Ава */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            border-bottom: 1px solid #1a1a1a;
+        }
+
+        .balance-box {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .balance-label { font-size: 12px; color: var(--gray-text); }
+        .balance-value { font-size: 20px; font-weight: bold; text-shadow: var(--neon-shadow); }
+
+        .profile-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 2px solid var(--neon-blue);
+            box-shadow: var(--neon-shadow);
+            cursor: pointer;
+            overflow: hidden;
+        }
+
+        /* Основной контент (Вкладки) */
+        .content {
+            height: calc(100vh - 140px);
+            overflow-y: auto;
+            padding: 20px;
+        }
+
+        .tab-content { display: none; }
+        .active-tab { display: block; }
+
+        /* Карточка NFT как на скрине */
+        .nft-card {
+            background: #111;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-left: 3px solid var(--neon-blue);
+        }
+
+        .nft-info { display: flex; align-items: center; gap: 10px; }
+        .nft-img { width: 45px; height: 45px; border-radius: 8px; background: #222; }
+        .price-up { color: #00ff88; font-size: 14px; }
+        .price-down { color: #ff4444; font-size: 14px; }
+
+        /* Нижнее меню */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            height: 70px;
+            background: #0a0a0a;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            border-top: 1px solid #222;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: var(--gray-text);
+            font-size: 10px;
+            cursor: pointer;
+        }
+
+        .nav-item.active { color: var(--neon-blue); text-shadow: var(--neon-shadow); }
+        .nav-icon { font-size: 24px; margin-bottom: 4px; }
+
+        /* Кнопка назад */
+        .back-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            color: var(--gray-text);
+            cursor: pointer;
+            z-index: 100;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="main-screen">
+        <div class="header">
+            <div class="balance-box">
+                <span class="balance-label">TON BALANCE</span>
+                <span class="balance-value">20.21 TON</span>
+            </div>
+            <div class="profile-btn" onclick="showTab('profile')">
+                <img id="user-avatar" src="" style="width:100%; height:100%; object-fit: cover;">
+            </div>
+        </div>
+
+        <div class="content">
+            <div id="market" class="tab-content active-tab">
+                <h3 style="color: var(--neon-blue)">Trending NFTs</h3>
+                <div class="nft-card">
+                    <div class="nft-info">
+                        <div class="nft-img"></div>
+                        <div><b>Timeless</b><br><span style="color:#555">#8421</span></div>
+                    </div>
+                    <div style="text-align: right;">
+                        <b>5.58 TON</b><br>
+                        <span class="price-up">▲ 12.5%</span>
+                    </div>
+                </div>
+            </div>
+
+            <div id="profile" class="tab-content">
+                <div class="back-btn" onclick="showTab('market')">← Назад</div>
+                <h2 style="margin-top: 50px; text-align: center;">Мой Профиль</h2>
+                <button style="width:100%; padding:15px; margin-bottom:10px; background:var(--neon-blue); border:none; border-radius:10px; font-weight:bold;">Пополнить TON</button>
+                <button style="width:100%; padding:15px; background:#222; color:white; border:none; border-radius:10px;">Подключить Tonkeeper</button>
+            </div>
+        </div>
+
+        <nav class="bottom-nav">
+            <div class="nav-item active" onclick="showTab('market')">
+                <span class="nav-icon">📊</span>
+                <span>МАРКЕТ</span>
+            </div>
+            <div class="nav-item" onclick="showTab('sniper')">
+                <span class="nav-icon">🎯</span>
+                <span>СНАЙПЕР</span>
+            </div>
+            <div class="nav-item" onclick="showTab('profile')">
+                <span class="nav-icon">👤</span>
+                <span>ПРОФИЛЬ</span>
+            </div>
+        </nav>
+    </div>
+
+    <script>
+        let tg = window.Telegram.WebApp;
+        tg.expand(); // Развернуть на весь экран
+
+        // Загрузка аватарки из ТГ
+        if (tg.initDataUnsafe.user) {
+            document.getElementById('user-avatar').src = tg.initDataUnsafe.user.photo_url || "https://via.placeholder.com/40";
+        }
+
+        function showTab(tabId) {
+            // Убираем активный класс у всех контентов
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active-tab');
+            });
+            // Показываем нужный
+            document.getElementById(tabId).classList.add('active-tab');
+            
+            // Обновляем иконки в меню
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+            });
+        }
+    </script>
+</body>
+</html>
