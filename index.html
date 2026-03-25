@@ -222,18 +222,18 @@
         </div>
 
         <nav class="bottom-nav">
-            <div class="nav-item active" onclick="showTab('market')">
-                <span class="nav-icon">📊</span>
-                <span>МАРКЕТ</span>
-            </div>
-            <div class="nav-item" onclick="showTab('sniper')">
-                <span class="nav-icon">🎯</span>
-                <span>СНАЙПЕР</span>
-            </div>
-            <div class="nav-item" onclick="showTab('profile')">
-                <span class="nav-icon">👤</span>
-                <span>ПРОФИЛЬ</span>
-            </div>
+            <div class="nav-item active" onclick="showTab('market', this)">
+    <i class="fas fa-store"></i>
+    <span>МАРКЕТ</span>
+</div>
+<div class="nav-item" onclick="showTab('sniper', this)">
+    <i class="fas fa-bullseye"></i>
+    <span>СНАЙПЕР</span>
+</div>
+<div class="nav-item" onclick="showTab('profile', this)">
+    <i class="fas fa-user"></i>
+    <span>ПРОФИЛЬ</span>
+</div>
         </nav>
     </div>
 
@@ -241,84 +241,75 @@
     let tg = window.Telegram.WebApp;
     tg.expand();
 
-    // СЮДА ВСТАВЛЯЙ ССЫЛКУ ИЗ NGROK КАЖДЫЙ РАЗ ПРИ ПЕРЕЗАПУСКЕ
     const API_URL = "https://unhazy-overcaustic-alicia.ngrok-free.dev";
 
+    // Функция переключения вкладок с подсветкой
+    function showTab(tabId, el) {
+        // Убираем активный класс у всех контентов
+        document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active-tab'));
+        // Показываем нужный
+        document.getElementById(tabId).classList.add('active-tab');
+
+        // Подсветка кнопок в меню
+        document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+        if (el) el.classList.add('active');
+    }
+
     async function updateDashboard() {
+        const nftList = document.getElementById('nft-list');
         try {
-            // Запрос баланса
-            const balResponse = await fetch(`${API_URL}/api/balance`);
-            const balData = await balResponse.json();
+            const balRes = await fetch(`${API_URL}/api/balance`);
+            const balData = await balRes.json();
             document.getElementById('balance-value').innerText = `${balData.balance} TON`;
 
-            // Запрос NFT
-            const nftResponse = await fetch(`${API_URL}/api/trending`);
-            const nfts = await nftResponse.json();
+            const nftRes = await fetch(`${API_URL}/api/trending`);
+            const nfts = await nftRes.json();
             renderNFTs(nfts);
-
-        } catch (error) {
-            console.error("Ошибка обновления:", error);
-            document.getElementById('nft-list').innerHTML = "<p style='color:red; text-align:center;'>Ошибка связи с бэкендом</p>";
+        } catch (e) {
+            nftList.innerHTML = "<p style='color:#ff4444; text-align:center;'>OFFLINE</p>";
+            console.log("Server down");
         }
     }
 
+    // Рендер NFT
     function renderNFTs(nfts) {
         const container = document.getElementById('nft-list');
-        container.innerHTML = '';
-        nfts.forEach(nft => {
-            container.innerHTML += `
-                <div class="nft-card">
-                    <div class="nft-info">
-                        <img src="${nft.image}" class="nft-img" onerror="this.src='https://via.placeholder.com/45'">
-                        <div><b>${nft.name}</b><br><span style="color:#555">#${nft.id}</span></div>
-                    </div>
-                    <div style="text-align: right;">
-                        <b>${nft.floor} TON</b><br>
-                        <span class="${nft.change >= 0 ? 'price-up' : 'price-down'}">
-                            ${nft.change >= 0 ? '▲' : '▼'} ${Math.abs(nft.change)}%
-                        </span>
-                    </div>
-                </div>`;
+        container.innerHTML = nfts.map(nft => `
+            <div class="nft-card" style="animation: fadeIn 0.5s ease;">
+                <div class="nft-info">
+                    <img src="${nft.image}" class="nft-img">
+                    <div><b>${nft.name}</b><br><small>#${nft.id}</small></div>
+                </div>
+                <div style="text-align:right"><b>${nft.floor} TON</b></div>
+            </div>
+        `).join('');
+    }
+
+    // НЕОНОВЫЕ ПАУКИ (ФОН)
+    const canvas = document.getElementById('spider-canvas');
+    const ctx = canvas.getContext('2d');
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    let dots = [];
+    for(let i=0; i<30; i++) dots.push({x:Math.random()*canvas.width, y:Math.random()*canvas.height, vx:(Math.random()-0.5), vy:(Math.random()-0.5)});
+
+    function draw() {
+        ctx.clearRect(0,0,canvas.width,canvas.height);
+        ctx.strokeStyle = "rgba(0, 229, 255, 0.15)";
+        dots.forEach(d => {
+            d.x += d.vx; d.y += d.vy;
+            if(d.x<0 || d.x>canvas.width) d.vx*=-1;
+            if(d.y<0 || d.y>canvas.height) d.vy*=-1;
+            dots.forEach(d2 => {
+                if(Math.hypot(d.x-d2.x, d.y-d2.y) < 100) {
+                    ctx.beginPath(); ctx.moveTo(d.x, d.y); ctx.lineTo(d2.x, d2.y); ctx.stroke();
+                }
+            });
         });
+        requestAnimationFrame(draw);
     }
-
-    // Запуск при загрузке
+    draw();
     updateDashboard();
-
-    // Твоя функция переключения вкладок
-    function showTab(tabId) {
-        document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active-tab'));
-        document.getElementById(tabId).classList.add('active-tab');
-    }
-
-    if (tg.initDataUnsafe.user) {
-        document.getElementById('user-avatar').src = tg.initDataUnsafe.user.photo_url || "";
-    }
-      <canvas id="spider-canvas"></canvas>
-
-<div id="market" class="tab-content active-tab">
-    <div class="market-selector">
-        <div class="market-chip selected">ALL</div>
-        <div class="market-chip">GETGEMS</div>
-        <div class="market-chip">XPLUS</div>
-        <div class="market-chip">FRAGMENT</div>
-    </div>
-    <h3 style="color: var(--neon-blue); letter-spacing: 2px;">LIVE FEED</h3>
-    <div id="nft-list"></div>
-</div>
-
-<div id="profile" class="tab-content">
-    <div class="back-btn" onclick="showTab('market')">← ESC</div>
-    <div style="text-align: center; margin-top: 40px;">
-        <div class="balance-value" id="profile-balance" style="font-size: 32px;">0.00 TON</div>
-        <p style="color: var(--gray-text);">Wallet Not Connected</p>
-    </div>
-    
-    <button onclick="depositTON()" style="width:100%; padding:18px; margin-top:20px; background:transparent; border: 2px solid var(--neon-blue); color: var(--neon-blue); border-radius:12px; font-weight:bold; text-transform:uppercase; cursor:pointer; transition: 0.3s;" onmouseover="this.style.background='rgba(0,229,255,0.1)'" onmouseout="this.style.background='transparent'">
-        📥 Пополнить TON
-    </button>
-</div>
-      
 </script>
 </body>
 </html>
