@@ -3,92 +3,35 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Sniper Elite</title>
+    <title>Sniper Elite & Casino</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        :root {
-            --neon-blue: #00e5ff;
-            --bg-dark: #050505;
-            --card-bg: rgba(20, 20, 20, 0.8);
-            --neon-shadow: 0 0 10px rgba(0, 229, 255, 0.5);
-        }
+        :root { --neon: #00e5ff; --pink: #ff00ff; --bg: #050505; }
+        body { margin: 0; background: var(--bg); color: white; font-family: 'Segoe UI', sans-serif; overflow: hidden; }
+        
+        #spider-canvas { position: fixed; top: 0; left: 0; z-index: -1; }
+        .container { padding: 20px; padding-bottom: 90px; height: 100vh; overflow-y: auto; }
 
-        body {
-            margin: 0; padding: 0;
-            background-color: var(--bg-dark);
-            color: white;
-            font-family: 'Segoe UI', sans-serif;
-            overflow: hidden;
-        }
-
-        /* Неоновые пауки на фоне */
-        #spider-canvas {
-            position: fixed; top: 0; left: 0;
-            width: 100%; height: 100%;
-            z-index: -1;
-        }
-
-        .container { padding: 20px; padding-bottom: 80px; }
-
-        /* Шапка с балансом */
-        .balance-box {
-            background: var(--card-bg);
-            border: 1px solid #333;
-            border-radius: 15px;
-            padding: 15px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: var(--neon-shadow);
-            margin-bottom: 25px;
-        }
-
-        .balance-value { font-size: 24px; font-weight: bold; color: var(--neon-blue); }
-
-        /* Вкладки */
-        .tab-content { display: none; animation: fadeIn 0.4s ease; }
+        /* Элементы интерфейса */
+        .balance-box { background: rgba(20,20,20,0.9); border: 1px solid #333; border-radius: 15px; padding: 15px; display: flex; justify-content: space-between; box-shadow: 0 0 15px rgba(0,229,255,0.2); margin-bottom: 20px; }
+        .tab-content { display: none; animation: fadeIn 0.3s ease; }
         .active-tab { display: block; }
-
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* Снайпер: Маркетплейсы */
-        .market-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; }
-        .market-card {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid #333;
-            padding: 15px;
-            border-radius: 12px;
-            text-align: center;
-            cursor: pointer;
-            transition: 0.3s;
-        }
-        .market-card:active { border-color: var(--neon-blue); transform: scale(0.95); }
-        .market-card i { font-size: 24px; margin-bottom: 8px; display: block; }
+        /* Карточки и кнопки */
+        .market-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .card { background: rgba(255,255,255,0.05); border: 1px solid #333; padding: 15px; border-radius: 12px; text-align: center; }
+        .btn-action { width: 100%; padding: 15px; background: transparent; border: 2px solid var(--neon); color: var(--neon); border-radius: 12px; font-weight: bold; cursor: pointer; margin-top: 15px; }
+        
+        /* Навигация */
+        .nav-bar { position: fixed; bottom: 0; width: 100%; background: rgba(5,5,5,0.95); display: flex; justify-content: space-around; padding: 15px 0; border-top: 1px solid #222; }
+        .nav-item { color: #555; text-align: center; font-size: 10px; }
+        .nav-item.active { color: var(--neon); text-shadow: 0 0 10px var(--neon); }
+        .nav-item i { font-size: 20px; display: block; }
 
-        /* Нижнее меню */
-        .nav-bar {
-            position: fixed; bottom: 0; width: 100%;
-            background: rgba(10, 10, 10, 0.95);
-            display: flex; justify-content: space-around;
-            padding: 15px 0; border-top: 1px solid #222;
-        }
-
-        .nav-item { color: #555; text-align: center; transition: 0.3s; cursor: pointer; }
-        .nav-item.active { color: var(--neon-blue); text-shadow: var(--neon-shadow); transform: translateY(-3px); }
-        .nav-item i { font-size: 20px; }
-        .nav-item span { font-size: 10px; display: block; margin-top: 4px; font-weight: bold; }
-
-        /* Кнопка пополнения */
-        .btn-deposit {
-            width: 100%; padding: 15px;
-            background: transparent;
-            border: 2px solid var(--neon-blue);
-            color: var(--neon-blue);
-            border-radius: 12px;
-            font-weight: bold;
-            margin-top: 20px;
-            cursor: pointer;
-        }
+        /* Анимация тряски для кубика */
+        .shake { animation: shake 0.2s infinite; }
+        @keyframes shake { 0% { transform: rotate(0); } 25% { transform: rotate(5deg); } 75% { transform: rotate(-5deg); } 100% { transform: rotate(0); } }
     </style>
 </head>
 <body>
@@ -97,175 +40,124 @@
 
 <div class="container">
     <div class="balance-box">
-        <div>
-            <div style="font-size: 10px; color: #888;">MY BALANCE</div>
-            <div class="balance-value" id="balance-value">0.00 TON</div>
-        </div>
-        <i class="fa-solid fa-circle-nodes" style="color: var(--neon-blue); font-size: 24px;"></i>
+        <div><small style="color:#888">BALANCE</small><div style="font-size:22px; color:var(--neon)" id="bal">0.00 TON</div></div>
+        <i class="fas fa-wallet" style="font-size:24px; color:var(--neon)"></i>
     </div>
 
     <div id="market" class="tab-content active-tab">
-        <h3 style="color: var(--neon-blue);">LIVE FEED</h3>
-        <div id="nft-list"><p style="color:#555">Waiting for connection...</p></div>
+        <h3 style="color:var(--neon)">LIVE FEED</h3>
+        <div id="nft-list"></div>
     </div>
 
     <div id="sniper" class="tab-content">
-        <h3 style="color: var(--neon-blue);">SELECT MARKETPLACE</h3>
+        <h3 style="color:var(--neon)">SNIPER BOT</h3>
         <div class="market-grid">
-    <div class="market-card" onclick="selectMarket('GetGems')">
-        <i class="fas fa-gem"></i>GetGems
+            <div class="card" onclick="selectMarket('GetGems')"><i class="fas fa-gem"></i><br>GetGems</div>
+            <div class="card" onclick="selectMarket('Fragment')"><i class="fas fa-fragment"></i><br>Fragment</div>
+        </div>
     </div>
-    <div class="market-card" onclick="selectMarket('XPlus')">
-        <i class="fas fa-bolt"></i>XPlus
-    </div>
-    <div class="market-card" onclick="selectMarket('Fragment')">
-        <i class="fas fa-fragment"></i>Fragment
-    </div>
-    <div class="market-card" onclick="selectMarket('Trending')">
-        <i class="fas fa-fire"></i>Trending
-    </div>
-</div>
+
+    <div id="casino" class="tab-content" style="text-align:center">
+        <h3 style="color:var(--pink)">NEON DICE</h3>
+        <div id="dice" style="font-size:80px; margin:20px">🎲</div>
+        <div class="card">
+            <p>Ставка: <span id="bet-ui">0.5</span> TON</p>
+            <input type="range" min="0.1" max="5" step="0.1" value="0.5" style="width:100%" oninput="document.getElementById('bet-ui').innerText=this.value">
+            <button class="btn-action" style="border-color:var(--pink); color:var(--pink)" onclick="playGame()">ИГРАТЬ</button>
+        </div>
     </div>
 
     <div id="profile" class="tab-content">
-    <h3 style="color: var(--neon-blue);">MY ACCOUNT</h3>
-    <div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 12px; border-left: 3px solid var(--neon-blue); margin-bottom: 20px;">
-        <p id="user-name" style="margin:0; font-weight:bold;">Ruslan</p>
-        <p style="font-size: 12px; color: #888; margin-top:5px;">Статус: <span style="color:#00ff88;">Premium VIP</span></p>
+        <h3 style="color:var(--neon)">PROFILE</h3>
+        <div class="card" style="text-align:left">
+            <b id="u-name">User</b><br><small style="color:#00ff88">Status: VIP</small>
+        </div>
+        <button class="btn-action" onclick="deposit()">📥 ПОПОЛНИТЬ TON</button>
     </div>
-    
-    <button class="btn-deposit" onclick="depositTON()" style="display:flex; align-items:center; justify-content:center; gap:10px;">
-        <i class="fa-solid fa-bolt-lightning"></i>
-        ПОПОЛНИТЬ БАЛАНС
-    </button>
-</div>
 </div>
 
 <div class="nav-bar">
-    <div class="nav-item active" onclick="showTab('market', this)">
-        <i class="fas fa-store"></i><span>МАРКЕТ</span>
-    </div>
-    <div class="nav-item" onclick="showTab('sniper', this)">
-        <i class="fas fa-crosshairs"></i><span>СНАЙПЕР</span>
-    </div>
-    <div class="nav-item" onclick="showTab('profile', this)">
-        <i class="fas fa-user-shield"></i><span>ПРОФИЛЬ</span>
-    </div>
+    <div class="nav-item active" onclick="showTab('market', this)"><i class="fas fa-store"></i>МАРКЕТ</div>
+    <div class="nav-item" onclick="showTab('sniper', this)"><i class="fas fa-crosshairs"></i>СНАЙПЕР</div>
+    <div class="nav-item" onclick="showTab('casino', this)"><i class="fas fa-dice"></i>GAMES</div>
+    <div class="nav-item" onclick="showTab('profile', this)"><i class="fas fa-user"></i>ПРОФИЛЬ</div>
 </div>
 
 <script>
     let tg = window.Telegram.WebApp;
     tg.expand();
+    const API_URL = "https://unhazy-overcaustic-alicia.ngrok-free.dev"; // ЗАМЕНИ НА СВОЙ NGROK
 
-    // ИСПРАВЬ ЭТУ ССЫЛКУ НА СВОЮ ИЗ NGROK (без лишних слов!)
-    const API_URL = "https://unhazy-overcaustic-alicia.ngrok-free.dev";
-
-    function showTab(tabId, el) {
+    function showTab(id, el) {
         document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active-tab'));
-        document.getElementById(tabId).classList.add('active-tab');
+        document.getElementById(id).classList.add('active-tab');
         document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
-        if (el) el.classList.add('active');
-        tg.HapticFeedback.impactOccurred('medium');
+        el.classList.add('active');
+        tg.HapticFeedback.impactOccurred('light');
     }
-async function selectMarket(name) {
-    tg.HapticFeedback.impactOccurred('heavy');
-    const list = document.getElementById('nft-list');
-    
-    // Показываем статус сканирования
-    list.innerHTML = `<div style="text-align:center; color:var(--neon-blue); padding:20px;">
-        <i class="fas fa-spinner fa-spin"></i> СКАНИРУЕМ ${name.toUpperCase()}...
-    </div>`;
 
-    // Переключаем на вкладку Маркет, чтобы видеть результат
-    showTab('market', document.querySelector('.nav-item'));
-
-    try {
-        const response = await fetch(`${API_URL}/api/snipe/${name}`);
-        const nfts = await response.json();
-        
-        // Рисуем найденные лоты
-        list.innerHTML = nfts.map(nft => `
-            <div class="nft-card" style="border-left: 3px solid #00ff88; margin-bottom:10px;">
-                <div class="nft-info">
-                    <img src="${nft.image}" class="nft-img" onerror="this.src='https://via.placeholder.com/45'">
-                    <div><b>${nft.name}</b><br><small>#${nft.id}</small></div>
-                </div>
-                <div style="text-align:right">
-                    <b style="color:#00ff88;">${nft.floor} TON</b><br>
-                    <span style="font-size:10px; color:#888;">LOW PRICE!</span>
-                </div>
+    async function selectMarket(m) {
+        tg.HapticFeedback.impactOccurred('heavy');
+        document.getElementById('nft-list').innerHTML = "<p>Scanning...</p>";
+        showTab('market', document.querySelector('.nav-item'));
+        const res = await fetch(`${API_URL}/api/snipe/${m}`);
+        const data = await res.json();
+        document.getElementById('nft-list').innerHTML = data.map(n => `
+            <div class="card" style="display:flex; justify-content:space-between; margin-bottom:10px; border-left:3px solid #0f8">
+                <span>${n.name}</span><b>${n.floor} TON</b>
             </div>
         `).join('');
-        
-    } catch (e) {
-        list.innerHTML = "<p style='color:red; text-align:center;'>Ошибка сканера</p>";
     }
-}
 
-   function depositTON() {
-    const myWallet = "UQByH...ТВОЙ_АДРЕС"; // ВАЖНО: Вставь сюда свой реальный адрес TON
-    const amount = 1.0; // Сумма по умолчанию (можно менять)
-    const comment = "Deposit to Sniper Bot"; // Комментарий к платежу
+    async function playGame() {
+        const bet = document.getElementById('bet-ui').innerText;
+        const d = document.getElementById('dice');
+        d.classList.add('shake');
+        const res = await fetch(`${API_URL}/api/play/dice?bet=${bet}`);
+        const data = await res.json();
+        setTimeout(() => {
+            d.classList.remove('shake');
+            if(data.win) { d.innerText="💎"; tg.showAlert("WIN! +"+data.result_amount); }
+            else { d.innerText="💀"; tg.showAlert("LOSE"); }
+            update();
+        }, 800);
+    }
 
-    tg.showPopup({
-        title: 'Пополнение баланса',
-        message: `Адрес для перевода:\n${myWallet}\n\nЖелаете открыть кошелек для оплаты?`,
-        buttons: [
-            {id: 'pay', type: 'default', text: '💎 Оплатить'},
-            {id: 'copy', type: 'default', text: '📋 Копировать адрес'},
-            {type: 'cancel', text: 'Отмена'}
-        ]
-    }, function(buttonId) {
-        if (buttonId === 'pay') {
-            // Формируем прямую ссылку для TON-кошельков (ton://transfer/АДРЕС)
-            const tonLink = `ton://transfer/${myWallet}?amount=${amount * 1000000000}&text=${encodeURIComponent(comment)}`;
-            tg.openTelegramLink(tonLink); 
-        }
-        if (buttonId === 'copy') {
-            // Копируем адрес в буфер обмена
-            navigator.clipboard.writeText(myWallet);
-            tg.showAlert("Адрес скопирован!");
-        }
-    });
-}
+    function deposit() {
+        const wall = "UQByH...ТВОЙ_АДРЕС"; // ВСТАВЬ СВОЙ АДРЕС
+        const link = `ton://transfer/${wall}?amount=1000000000&text=SniperDeposit`;
+        tg.showPopup({ title: 'Deposit', message: 'Send TON to:\n'+wall, buttons: [{type:'ok', text:'Open Wallet'}]}, (b) => {
+            if(b) tg.openTelegramLink(link);
+        });
+    }
 
-    async function updateData() {
+    async function update() {
         try {
             const res = await fetch(`${API_URL}/api/balance`);
             const data = await res.json();
-            document.getElementById('balance-value').innerText = data.balance + " TON";
-            // Тут можно добавить и отрисовку NFT
-        } catch(e) { console.log("Offline mode"); }
+            document.getElementById('bal').innerText = data.balance + " TON";
+        } catch(e) {}
     }
 
-    // РИСУЕМ ПАУКОВ
+    // SPIDER ANIMATION
     const canvas = document.getElementById('spider-canvas');
     const ctx = canvas.getContext('2d');
     canvas.width = window.innerWidth; canvas.height = window.innerHeight;
-    let particles = [];
-    for(let i=0; i<35; i++) particles.push({x: Math.random()*canvas.width, y: Math.random()*canvas.height, vx: (Math.random()-0.5)*0.6, vy: (Math.random()-0.5)*0.6});
-
+    let pts = [];
+    for(let i=0; i<30; i++) pts.push({x:Math.random()*canvas.width, y:Math.random()*canvas.height, vx:Math.random()-0.5, vy:Math.random()-0.5});
     function draw() {
-        ctx.clearRect(0,0,canvas.width,canvas.height);
-        ctx.strokeStyle = "rgba(0, 229, 255, 0.15)";
-        ctx.lineWidth = 1;
-        particles.forEach((p, i) => {
-            p.x += p.vx; p.y += p.vy;
-            if(p.x<0 || p.x>canvas.width) p.vx*=-1;
-            if(p.y<0 || p.y>canvas.height) p.vy*=-1;
-            particles.slice(i).forEach(p2 => {
-                let d = Math.hypot(p.x-p2.x, p.y-p2.y);
-                if(d < 110) { ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(p2.x, p2.y); ctx.stroke(); }
+        ctx.clearRect(0,0,canvas.width,canvas.height); ctx.strokeStyle="rgba(0,229,255,0.15)";
+        pts.forEach((p,i)=>{
+            p.x+=p.vx; p.y+=p.vy;
+            if(p.x<0||p.x>canvas.width) p.vx*=-1; if(p.y<0||p.y>canvas.height) p.vy*=-1;
+            pts.slice(i).forEach(p2=>{
+                if(Math.hypot(p.x-p2.x, p.y-p2.y)<100){ ctx.beginPath(); ctx.moveTo(p.x,p.y); ctx.lineTo(p2.x,p2.y); ctx.stroke(); }
             });
         });
         requestAnimationFrame(draw);
     }
-    draw();
-    updateData();
-
-    if(tg.initDataUnsafe.user) {
-        document.getElementById('user-name').innerText = tg.initDataUnsafe.user.first_name;
-    }
+    draw(); update();
+    if(tg.initDataUnsafe.user) document.getElementById('u-name').innerText = tg.initDataUnsafe.user.first_name;
 </script>
 </body>
 </html>
