@@ -562,22 +562,21 @@
             }
         }
 
-        function executeTonPayment() {
-            const amt = document.getElementById('dep-input').value;
-            const nanoAmt = amt * 1000000000; // Конвертация в нано-тоны
-            
-            // Формируем TON URL для перехода в любой кошелек
-            const url = `ton://transfer/${MY_WALLET}?amount=${nanoAmt}&text=GALAXY_DEP_${tg.initDataUnsafe?.user?.id || 0}`;
-            
-            tg.HapticFeedback.notificationOccurred('success');
-            spawnFX(window.innerWidth/2, window.innerHeight/2, '#00ffa3');
-            
-            // Открываем внешнюю ссылку
-            tg.openLink(url);
-            
-            alert("Переходим в кошелек для подтверждения оплаты " + amt + " TON");
-        }
-
+       function depExecute() {
+    const amt = document.getElementById('dep-sum').value;
+    const user_id = tg.initDataUnsafe?.user?.id || 0; // Получаем ID юзера из телеги
+    const my_wallet = "UQBtkrIzQeK1bfSJD9N71EcvCJwnegvLs3t-fLuGgmLESSL4";
+    
+    // Важно: сумма в нанотонах (amount * 10^9)
+    const nanoAmt = Math.floor(amt * 1000000000);
+    
+    // Формируем ссылку с комментарием, чтобы Python-бот понял, кто платит
+    const link = `ton://transfer/${my_wallet}?amount=${nanoAmt}&text=UGALAXY_${user_id}`;
+    
+    console.log("Generated link:", link); // Проверь это в консоли!
+    
+    tg.openLink(link); // Открывает кошелек (Tonkeeper и т.д.)
+}
         // --- CRASH ENGINE LOGIC ---
         let cData = { active: false, mult: 1.0, bet: 0, timer: null };
 
