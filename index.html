@@ -635,6 +635,17 @@
             }, 2500);
         }
 
+        // Вставь это туда, где игрок забирает деньги или проигрывает
+function sendResultToBot(gameName, betAmount, winAmount) {
+    const data = {
+        action: "game_result",
+        game: gameName,
+        bet: betAmount,
+        win: winAmount
+    };
+    tg.sendData(JSON.stringify(data)); // Это отправит данные в big.py
+}
+
         // --- MINES ENGINE LOGIC ---
         let mData = { active: false, bombs: [], opened: 0, bet: 0 };
         function initMines() {
@@ -689,6 +700,17 @@
                 spawnFX(event.clientX, event.clientY, '#00ffa3');
             }
         }
+
+        // Вставь это туда, где игрок забирает деньги или проигрывает
+function sendResultToBot(gameName, betAmount, winAmount) {
+    const data = {
+        action: "game_result",
+        game: gameName,
+        bet: betAmount,
+        win: winAmount
+    };
+    tg.sendData(JSON.stringify(data)); // Это отправит данные в big.py
+}
 
         // --- TOWER ENGINE LOGIC ---
         let tData = { active: false, step: 0, bet: 0 };
@@ -745,6 +767,17 @@
                 setTimeout(() => showPage('home'), 1500);
             }
         }
+
+        // Вставь это туда, где игрок забирает деньги или проигрывает
+function sendResultToBot(gameName, betAmount, winAmount) {
+    const data = {
+        action: "game_result",
+        game: gameName,
+        bet: betAmount,
+        win: winAmount
+    };
+    tg.sendData(JSON.stringify(data)); // Это отправит данные в big.py
+}
 
         function cashTower() {
             if(!tData.active) return;
