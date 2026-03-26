@@ -463,6 +463,16 @@
          * GALAXY OMNIVERSE ENGINE v4.0
          * Более 600 строк чистой JavaScript логики
          */
+        // Читаем баланс, который бот передал в ссылке (из big.py)
+const urlParams = new URLSearchParams(window.location.search);
+const balFromBot = urlParams.get('bal');
+
+if (balFromBot) {
+    // Устанавливаем баланс из бота
+    user.bal = parseFloat(balFromBot);
+    // Обновляем визуальные цифры на экране
+    sync(); 
+}
 
         const tg = window.Telegram.WebApp;
         tg.expand();
